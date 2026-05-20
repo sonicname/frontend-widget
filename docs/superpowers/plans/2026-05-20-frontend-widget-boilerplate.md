@@ -538,14 +538,14 @@ git commit -m "feat: add widget shell component and critical css"
 ## Task 7: Mount/unmount
 
 **Files:**
-- Create: `src/core/mount.ts`
+- Create: `src/core/mount.svelte.ts` (the `.svelte.ts` extension is REQUIRED — `$state` runes only compile in `.svelte`/`.svelte.ts`/`.svelte.js` files, not plain `.ts`)
 - Test: `tests/unit/mount.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest';
-import { mountWidget } from '../../src/core/mount';
+import { mountWidget } from '../../src/core/mount.svelte';
 import App from '../../src/components/App.svelte';
 
 describe('mountWidget', () => {
@@ -579,7 +579,7 @@ Expected: FAIL — `mountWidget` not defined.
 - [ ] **Step 3: Write minimal implementation**
 
 ```ts
-// src/core/mount.ts
+// src/core/mount.svelte.ts
 import { mount, unmount, type Component } from 'svelte';
 import { injectCss } from './css';
 import criticalCss from '../styles/critical.css?inline';
@@ -627,17 +627,17 @@ export function mountWidget(
 }
 ```
 
-> Note: `$state` in a `.ts` file requires the Svelte compiler to process it. If the toolchain does not compile `.ts` runes, replace the `state`/`update` lines with a plain object and remount on update. The test only asserts mount/destroy/root, so either works.
+> Note: the file MUST be named `mount.svelte.ts` so the Svelte compiler processes the `$state` rune. Using `$state` reactively means `update()` can patch props in place (via `Object.assign`) and the component re-renders without a remount, preserving internal state. The `@sveltejs/vite-plugin-svelte` plugin (used by both vite and vitest configs) compiles `.svelte.ts` modules.
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/unit/mount.test.ts`
-Expected: PASS (2 tests). If `$state` causes a compile error in `.ts`, apply the fallback in the note: replace `const state = $state(props)` with `const state = { ...props }` and make `update` reassign via `unmount`+`mount`.
+Expected: PASS (2 tests). If the svelte plugin does not transform `.svelte.ts` under vitest (import resolves but `$state` is undefined at runtime), fall back to: plain `const state = { ...props }`, and make `update()` call `unmount(app)` then re-`mount` with merged props into the same target. Update the file back to `mount.ts` and fix the test/api imports if you take the fallback. Report clearly which path you took.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/core/mount.ts tests/unit/mount.test.ts
+git add src/core/mount.svelte.ts tests/unit/mount.test.ts
 git commit -m "feat: add mount/unmount with shadow + light support"
 ```
 
@@ -695,7 +695,7 @@ Expected: FAIL — `createApi` not defined.
 ```ts
 // src/core/api.ts
 import App from '../components/App.svelte';
-import { mountWidget } from './mount';
+import { mountWidget } from './mount.svelte';
 import { register, store, unregister } from './registry';
 import { resolveAssetBase, makeLoader } from './loader';
 import type { WidgetConfig, WidgetInstance } from './types';
