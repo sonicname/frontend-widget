@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
+
   let {
     title = 'Widget',
     greeting = '',
@@ -20,6 +22,8 @@
     try {
       const mountPanel = (await load('query')) as (t: HTMLElement) => () => void;
       if (panelHost) teardown = mountPanel(panelHost);
+    } catch (err) {
+      console.error('[widget] failed to load query chunk', err);
     } finally {
       loadingPanel = false;
     }
@@ -30,6 +34,11 @@
     teardown = undefined;
     open = false;
   }
+
+  onDestroy(() => {
+    teardown?.();
+    teardown = undefined;
+  });
 </script>
 
 <div class="fw-root">
