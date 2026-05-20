@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { flushSync } from 'svelte';
 import { mountWidget } from '../../src/core/mount.svelte';
 import App from '../../src/components/App.svelte';
 
@@ -21,5 +22,24 @@ describe('mountWidget', () => {
     expect(container.shadowRoot).toBeNull();
     expect(root).toBe(document);
     expect(container.querySelector('.fw-root')).not.toBeNull();
+  });
+
+  it('update() changes rendered props in the same container without remounting', () => {
+    const host = document.querySelector('#slot') as HTMLElement;
+    const { container, update, destroy } = mountWidget(App, host, { shadow: false }, { title: 'Alpha' });
+
+    const btn = container.querySelector('button') as HTMLButtonElement;
+    expect(btn.textContent).toContain('Open Alpha');
+
+    update({ title: 'Beta' });
+    flushSync();
+
+    // Same container — no remount
+    expect(host.firstElementChild).toBe(container);
+    // Same button element identity (no teardown/remount)
+    expect(container.querySelector('button')).toBe(btn);
+    expect(btn.textContent).toContain('Open Beta');
+
+    destroy();
   });
 });
