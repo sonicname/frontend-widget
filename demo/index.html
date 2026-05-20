@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Widget demo</title>
+  </head>
+  <body>
+    <h1>Host page</h1>
+    <div id="slot-shadow"></div>
+    <div id="slot-light"></div>
+
+    <!-- Manual API usage -->
+    <script src="/dist/widget.iife.js"></script>
+    <script>
+      MyWidget.init({ target: '#slot-shadow', shadow: true, title: 'Shadow' });
+      MyWidget.init({ target: '#slot-light', shadow: false, title: 'Light' });
+    </script>
+  </body>
+</html>
