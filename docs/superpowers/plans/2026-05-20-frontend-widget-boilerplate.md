@@ -47,7 +47,9 @@ tests/
 ## Task 1: Project scaffold
 
 **Files:**
-- Create: `package.json`, `tsconfig.json`, `svelte.config.js`, `.gitignore`
+- Create: `package.json`, `tsconfig.json`, `svelte.config.js`, `.gitignore`, `vitest.config.ts`
+
+> Note: `vitest.config.ts` is created here (not later) because Tasks 3–10 run `vitest`, which needs the svelte plugin + jsdom environment. The build-only `vite.config.ts` is added later in Task 11.
 
 - [ ] **Step 1: Create `.gitignore`**
 
@@ -114,6 +116,22 @@ playwright-report/
 ```js
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 export default { preprocess: vitePreprocess() };
+```
+
+- [ ] **Step 4b: Create `vitest.config.ts`**
+
+```ts
+import { defineConfig } from 'vitest/config';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+
+export default defineConfig({
+  plugins: [svelte({ compilerOptions: { dev: false } })],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    include: ['tests/unit/**/*.test.ts'],
+  },
+});
 ```
 
 - [ ] **Step 5: Install dependencies**
@@ -890,28 +908,14 @@ git commit -m "feat: add example lazy greeting feature chunk"
 
 ---
 
-## Task 11: Vite + Vitest config (dual build)
+## Task 11: Vite build config (dual build)
 
 **Files:**
-- Create: `vite.config.ts`, `vitest.config.ts`
+- Create: `vite.config.ts`
 
-- [ ] **Step 1: Create `vitest.config.ts`**
+> Note: `vitest.config.ts` was already created in Task 1. This task only adds the build config.
 
-```ts
-import { defineConfig } from 'vitest/config';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-
-export default defineConfig({
-  plugins: [svelte({ compilerOptions: { dev: false } })],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    include: ['tests/unit/**/*.test.ts'],
-  },
-});
-```
-
-- [ ] **Step 2: Create `vite.config.ts`**
+- [ ] **Step 1: Create `vite.config.ts`**
 
 ```ts
 import { defineConfig } from 'vite';
@@ -943,21 +947,21 @@ export default defineConfig(({ mode }) => {
 });
 ```
 
-- [ ] **Step 3: Verify unit tests still pass under config**
+- [ ] **Step 2: Verify unit tests still pass**
 
 Run: `npx vitest run`
 Expected: PASS — all unit tests (registry, css, loader, mount, api, entry, greeting).
 
-- [ ] **Step 4: Build and inspect output**
+- [ ] **Step 3: Build and inspect output**
 
 Run: `npm run build`
 Expected: exit 0; `dist/widget.iife.js` and `dist/chunks/greeting.esm.js` exist; CSS is inlined inside the IIFE (no separate `.css` file in `dist/`).
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add vite.config.ts vitest.config.ts
-git commit -m "build: add dual vite build (core iife + esm chunks) and vitest config"
+git add vite.config.ts
+git commit -m "build: add dual vite build (core iife + esm chunks)"
 ```
 
 ---
