@@ -64,11 +64,11 @@ export async function fetchTodo(id = 1): Promise<Todo> {
 }
 ```
 
-### `src/features/QueryPanel.svelte`
-- `const client = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } })`.
-- Bọc `<QueryClientProvider {client}>`.
-- `const q = createQuery(() => ({ queryKey: ['todo', 1], queryFn: () => fetchTodo(1) }))`.
-- Render 3 trạng thái: loading / error (nút retry gọi `q.refetch()` hoặc invalidate) / data (hiện `title`).
+### `src/features/QueryPanel.svelte` + `src/features/TodoView.svelte`
+Tách 2 component để `createQuery` chạy *dưới* provider context (pattern chuẩn, tránh
+gọi `getContext` từ template `{@const}` cùng component tạo provider):
+- `QueryPanel.svelte`: `const client = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } })`; bọc `<QueryClientProvider {client}><TodoView /></QueryClientProvider>`.
+- `TodoView.svelte` (con): `const q = createQuery(() => ({ queryKey: ['todo', 1], queryFn: () => fetchTodo(1) }))`; render 3 trạng thái: loading / error (nút retry gọi `$q.refetch()`) / data (hiện `title`).
 
 ### `src/features/query.lazy.ts`
 ```ts

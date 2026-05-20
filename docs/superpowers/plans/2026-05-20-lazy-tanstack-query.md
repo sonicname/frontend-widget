@@ -143,19 +143,22 @@ git commit -m "feat: add fetchTodo helper for query demo"
 
 ---
 
-## Task 3: QueryPanel component
+## Task 3: QueryPanel + TodoView components
 
 **Files:**
-- Create: `src/features/QueryPanel.svelte`
+- Create: `src/features/QueryPanel.svelte` (provider wrapper)
+- Create: `src/features/TodoView.svelte` (child that calls `createQuery`)
 
-> No unit test in this task — QueryPanel's reactive async rendering is verified by e2e (Task 7). This task only creates the component and confirms it compiles via the chunk build in Task 5. (Per the spec's "fallback" note, we keep QueryPanel out of jsdom unit tests to avoid flaky async-reactivity assertions; `fetchTodo` + App wiring already cover the logic.)
+> No unit test in this task — the reactive async rendering is verified by e2e (Task 7). This task creates the two components; they compile-validate via the chunk build in Task 5. (Per the spec's "fallback" note, we keep these out of jsdom unit tests to avoid flaky async-reactivity assertions; `fetchTodo` + App wiring already cover the logic.)
+>
+> Why two components: `createQuery` reads the `QueryClient` from Svelte context, which must be available when it runs. The canonical, robust pattern is a parent that sets up `<QueryClientProvider>` and a CHILD component (rendered inside the provider) that calls `createQuery` in its `<script>`. This avoids calling `createQuery`/`getContext` from a template `{@const}` in the same component that creates the provider (which is fragile).
 
-- [ ] **Step 1: Create `src/features/QueryPanel.svelte`**
+- [ ] **Step 1: Create `src/features/QueryPanel.svelte`** (owns the QueryClient + provider)
 
 ```svelte
 <script lang="ts">
-  import { QueryClient, QueryClientProvider, createQuery } from '@tanstack/svelte-query';
-  import { fetchTodo } from './fetchTodo';
+  import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
+  import TodoView from './TodoView.svelte';
 
   const client = new QueryClient({
     defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -163,28 +166,40 @@ git commit -m "feat: add fetchTodo helper for query demo"
 </script>
 
 <QueryClientProvider {client}>
-  {@const q = createQuery(() => ({ queryKey: ['todo', 1], queryFn: () => fetchTodo(1) }))}
-  <div class="fw-query">
-    {#if $q.isPending}
-      <span>Loading…</span>
-    {:else if $q.isError}
-      <span>Error: {$q.error.message}</span>
-      <button class="fw-btn" onclick={() => $q.refetch()}>Retry</button>
-    {:else}
-      <strong>Todo #{$q.data.id}</strong>
-      <p>{$q.data.title}</p>
-    {/if}
-  </div>
+  <TodoView />
 </QueryClientProvider>
 ```
 
-> Note on the `createQuery` API surface: in `@tanstack/svelte-query` v6, `createQuery` returns a store accessed with the `$` prefix (`$q.isPending`, `$q.data`, `$q.error`, `$q.refetch`). If the installed v6 minor uses a runes-style accessor instead (e.g. `q.isPending` without `$`), adjust the template to match the installed API — verify against `node_modules/@tanstack/svelte-query` types. Do NOT guess; check the package's exported types and use what compiles. Confirm the chosen form compiles in Task 5's build.
+- [ ] **Step 2: Create `src/features/TodoView.svelte`** (child; calls `createQuery` under the provider)
 
-- [ ] **Step 2: Commit**
+```svelte
+<script lang="ts">
+  import { createQuery } from '@tanstack/svelte-query';
+  import { fetchTodo } from './fetchTodo';
+
+  const q = createQuery(() => ({ queryKey: ['todo', 1], queryFn: () => fetchTodo(1) }));
+</script>
+
+<div class="fw-query">
+  {#if $q.isPending}
+    <span>Loading…</span>
+  {:else if $q.isError}
+    <span>Error: {$q.error.message}</span>
+    <button class="fw-btn" onclick={() => $q.refetch()}>Retry</button>
+  {:else}
+    <strong>Todo #{$q.data.id}</strong>
+    <p>{$q.data.title}</p>
+  {/if}
+</div>
+```
+
+> Note on the `createQuery` API surface: in `@tanstack/svelte-query` v6, `createQuery` returns a store accessed with the `$` prefix (`$q.isPending`, `$q.data`, `$q.error`, `$q.refetch()`). If the installed v6 minor differs (e.g. a runes accessor without `$`, or `isLoading` instead of `isPending`), VERIFY against `node_modules/@tanstack/svelte-query` exported types and use what compiles — do NOT guess. The Task 5 build is the compile gate; if the form is wrong the build fails there and must be fixed.
+
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/features/QueryPanel.svelte
-git commit -m "feat: add QueryPanel component (self-contained QueryClient + query)"
+git add src/features/QueryPanel.svelte src/features/TodoView.svelte
+git commit -m "feat: add QueryPanel + TodoView (self-contained QueryClient + query)"
 ```
 
 ---
