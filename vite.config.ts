@@ -12,7 +12,10 @@ export default defineConfig(({ mode }) => {
       minify: 'esbuild',
       lib: isChunks
         ? {
-            entry: { greeting: 'src/features/greeting.lazy.ts' },
+            entry: {
+              greeting: 'src/features/greeting.lazy.ts',
+              query: 'src/features/query.lazy.ts',
+            },
             formats: ['es'],
             fileName: (_f, name) => `chunks/${name}.esm.js`,
           }
