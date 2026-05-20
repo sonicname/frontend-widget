@@ -1026,9 +1026,43 @@ git commit -m "docs: add demo embed page"
 ## Task 13: Playwright integration tests
 
 **Files:**
-- Create: `playwright.config.ts`, `tests/e2e/embed.spec.ts`
+- Create: `scripts/serve.mjs`, `playwright.config.ts`, `tests/e2e/embed.spec.ts`
 
-- [ ] **Step 1: Create `playwright.config.ts`**
+> Why a custom server: the demo references both `/demo/index.html` and `/dist/widget.iife.js`. `vite preview` in lib mode serves only `dist/` at the root, so it can't serve both paths. A tiny zero-dependency static file server rooted at the project root resolves both. Playwright builds first, then starts this server.
+
+- [ ] **Step 1: Create `scripts/serve.mjs`** (zero-dep static server, project root)
+
+```js
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { extname, join, normalize } from 'node:path';
+
+const root = process.cwd();
+const port = Number(process.env.PORT) || 4174;
+const types = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+};
+
+createServer(async (req, res) => {
+  try {
+    const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+    const rel = normalize(urlPath).replace(/^(\.\.[/\\])+/, '');
+    const filePath = join(root, rel === '/' || rel === '\\' ? 'demo/index.html' : rel);
+    const body = await readFile(filePath);
+    res.writeHead(200, { 'content-type': types[extname(filePath)] || 'application/octet-stream' });
+    res.end(body);
+  } catch {
+    res.writeHead(404);
+    res.end('Not found');
+  }
+}).listen(port, () => console.log(`serving ${root} on http://localhost:${port}`));
+```
+
+- [ ] **Step 2: Create `playwright.config.ts`**
 
 ```ts
 import { defineConfig } from '@playwright/test';
@@ -1036,15 +1070,14 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: 'tests/e2e',
   webServer: {
-    command: 'npm run build && npx vite preview --port 4174 --strictPort',
+    command: 'npm run build && node scripts/serve.mjs',
     port: 4174,
     reuseExistingServer: false,
+    timeout: 120_000,
   },
   use: { baseURL: 'http://localhost:4174' },
 });
 ```
-
-> Note: `vite preview` serves the project root by default with `dist/` accessible at `/dist/...` only if `demo/` references match. If preview cannot serve both `demo/` and `dist/`, add `"preview": { "outDir": "." }` handling or copy `demo/index.html` into `dist/`. Simplest: in this step also add a `vite.config` `preview` root pointing at project root and reference `/dist/widget.iife.js` (already used in demo).
 
 - [ ] **Step 2: Write the e2e test**
 
@@ -1086,12 +1119,12 @@ Expected: chromium downloaded.
 - [ ] **Step 4: Run e2e tests**
 
 Run: `npm run test:e2e`
-Expected: PASS (2 tests). If `/demo/index.html` 404s under preview, adjust the demo path or copy it into `dist/` per the Step 1 note, then re-run.
+Expected: PASS (2 tests). If `/demo/index.html` 404s, confirm `scripts/serve.mjs` is serving from the project root and that `npm run build` produced `dist/widget.iife.js` before the server started.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add playwright.config.ts tests/e2e/embed.spec.ts
+git add scripts/serve.mjs playwright.config.ts tests/e2e/embed.spec.ts
 git commit -m "test: add playwright integration tests for embed (shadow/light/destroy)"
 ```
 
