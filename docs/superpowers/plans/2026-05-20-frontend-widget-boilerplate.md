@@ -911,11 +911,21 @@ git commit -m "feat: add example lazy greeting feature chunk"
 ## Task 11: Vite build config (dual build)
 
 **Files:**
-- Create: `vite.config.ts`
+- Create: `src/core/iife.ts`, `vite.config.ts`
 
-> Note: `vitest.config.ts` was already created in Task 1. This task only adds the build config.
+> Note 1: `vitest.config.ts` was already created in Task 1. This task only adds the build entry + build config.
+>
+> Note 2 (IMPORTANT — global-clobber bug): `src/core/entry.ts` has named exports (`parseDataConfig`, `flushQueue`) AND sets `window.MyWidget = api` inside `bootstrap()`. If the IIFE build used `entry.ts` directly with `name: 'MyWidget'`, Rollup would assign the module's named exports to `window.MyWidget` AFTER bootstrap runs, clobbering the api. To avoid this, the IIFE build entry is a **side-effect-only wrapper** (`src/core/iife.ts`) that imports `entry.ts` but re-exports nothing. With zero exports, the IIFE wrapper does not reassign the global, so `window.MyWidget` keeps the api that `bootstrap()` set.
 
-- [ ] **Step 1: Create `vite.config.ts`**
+- [ ] **Step 1: Create `src/core/iife.ts`** (side-effect-only build entry)
+
+```ts
+// IIFE build entry: import entry.ts purely for its bootstrap side effect.
+// Re-exports nothing so the IIFE wrapper never reassigns window.MyWidget.
+import './entry';
+```
+
+- [ ] **Step 2: Create `vite.config.ts`**
 
 ```ts
 import { defineConfig } from 'vite';
@@ -937,7 +947,7 @@ export default defineConfig(({ mode }) => {
             fileName: (_f, name) => `chunks/${name}.esm.js`,
           }
         : {
-            entry: 'src/core/entry.ts',
+            entry: 'src/core/iife.ts',
             name: 'MyWidget',
             formats: ['iife'],
             fileName: () => 'widget.iife.js',
@@ -947,20 +957,24 @@ export default defineConfig(({ mode }) => {
 });
 ```
 
-- [ ] **Step 2: Verify unit tests still pass**
+- [ ] **Step 3: Verify unit tests still pass**
 
 Run: `npx vitest run`
 Expected: PASS — all unit tests (registry, css, loader, mount, api, entry, greeting).
 
-- [ ] **Step 3: Build and inspect output**
+- [ ] **Step 4: Build and inspect output**
 
 Run: `npm run build`
 Expected: exit 0; `dist/widget.iife.js` and `dist/chunks/greeting.esm.js` exist; CSS is inlined inside the IIFE (no separate `.css` file in `dist/`).
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Verify no global-clobber (critical)**
+
+Inspect the tail of `dist/widget.iife.js`. Confirm the IIFE does NOT end with an assignment like `window.MyWidget = { parseDataConfig, ... }` or `var MyWidget = (function(){...})()` that returns the helper exports. The only assignment to `window.MyWidget` / `MyWidget` should be the one from `bootstrap()` setting it to the api object (the one with `init`/`load`/`version`). If you find a clobbering reassignment, STOP and report it.
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add vite.config.ts
+git add src/core/iife.ts vite.config.ts
 git commit -m "build: add dual vite build (core iife + esm chunks)"
 ```
 
