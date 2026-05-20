@@ -17,7 +17,6 @@ export function mountWidget(
   props: Record<string, unknown>,
 ): MountResult {
   const container = document.createElement('div');
-  container.style.visibility = 'hidden';
   host.appendChild(container);
 
   let root: ShadowRoot | Document;
@@ -34,7 +33,6 @@ export function mountWidget(
 
   const state = $state(props);
   const app = mount(Comp, { target: mountTarget as Element, props: state });
-  container.style.visibility = '';
 
   return {
     container,
