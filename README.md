@@ -51,6 +51,19 @@ Lightweight Svelte widget that compiles to a single self-contained file embeddab
 Core resolves `assetBase` from its own `<script src>` and loads `chunks/<name>.esm.js`
 via dynamic `import()` on demand (`MyWidget.load('greeting')`).
 
+### Lazy library example: TanStack Query
+
+`src/features/query.lazy.ts` + `QueryPanel.svelte` + `TodoView.svelte` demonstrate
+lazy-loading a heavy library that needs a context provider. The chunk owns its own
+`QueryClient` and `QueryClientProvider`, so `@tanstack/svelte-query` is bundled only into
+`dist/chunks/query.esm.js` — never the core. The widget loads it on demand when the user
+clicks "Load data": `App` receives a `load` function from `init`, calls `load('query')`,
+and mounts the returned panel into the card. Swap `fetchTodo` and `TodoView` for your real
+data and UI.
+
+> Note: ESM chunks are built with `process.env.NODE_ENV` defined (see `vite.config.ts`),
+> because `@tanstack/query-core` references it at runtime.
+
 ## Develop
 
 - `npm test` — unit tests (Vitest + jsdom).
