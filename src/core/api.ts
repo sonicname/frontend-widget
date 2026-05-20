@@ -23,7 +23,7 @@ export function createApi(scriptSrc: string): WidgetApi {
 
     const { target, shadow, assetBase, ...props } = config;
     const id = register();
-    const mounted = mountWidget(App as unknown as import('svelte').Component, host, { shadow }, props);
+    const mounted = mountWidget(App as unknown as import('svelte').Component, host, { shadow }, { ...props, load });
 
     const instance: WidgetInstance = {
       id,
