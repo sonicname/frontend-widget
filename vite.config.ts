@@ -6,6 +6,9 @@ export default defineConfig(({ mode }) => {
   const isChunks = mode === 'chunks';
   return {
     plugins: [svelte()],
+    // @tanstack/query-core references process.env.NODE_ENV; define it so the
+    // browser chunks don't throw ReferenceError at runtime.
+    define: isChunks ? { 'process.env.NODE_ENV': '"production"' } : {},
     build: {
       emptyOutDir: !isChunks, // core build clears dist; chunks build appends
       cssCodeSplit: false,
