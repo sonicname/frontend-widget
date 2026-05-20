@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'docs: add frontend-widget boilerplate design spec *)",
+      "Bash(git commit -q -m 'docs: add frontend-widget boilerplate implementation plan *)",
+      "Bash(git commit -q -m 'docs: fix plan task ordering \\(vitest config to task 1\\) *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const pkg = require\\('./node_modules/svelte/package.json'\\); console.log\\('svelte:', pkg.version\\);\")",
+      "Bash(node -e \"const pkg = require\\('./node_modules/vite/package.json'\\); console.log\\('vite:', pkg.version\\);\")",
+      "Bash(node -e \"const pkg = require\\('./node_modules/vitest/package.json'\\); console.log\\('vitest:', pkg.version\\);\")",
+      "Bash(git commit *)",
+      "PowerShell(New-Item -ItemType Directory -Force \"D:\\\\Code\\\\frontend-widget\\\\src\\\\core\")",
+      "Bash(npx vitest *)",
+      "Bash(npx svelte-check *)",
+      "Bash(node -e \"const pkg = require\\('./node_modules/svelte/package.json'\\); console.log\\(JSON.stringify\\(pkg.exports?.['.'  ], null, 2\\)\\)\")",
+      "Bash(node -e \"const pkg = require\\('./node_modules/@sveltejs/vite-plugin-svelte/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(node -e \"const pkg = require\\('./node_modules/svelte/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(npx playwright *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(grep -o 'chunks/[^\"`]*' dist/widget.iife.js)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT: $?\")"
+    ]
+  }
+}
